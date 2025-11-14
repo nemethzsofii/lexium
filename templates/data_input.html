@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adatbevitel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 35px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568d3;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jogügyleti Nyilvántartó</h1>
+
+        <div class="cards-grid">
+            <!-- Új üggy felvétele Card -->
+            <div class="card">
+                <h2>Új üggy felvétele</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="case-number">Ügyszám</label>
+                        <input type="text" id="case-number" placeholder="Ügyszám megadása">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="case-name">Ügytárgy</label>
+                        <input type="text" id="case-name" placeholder="Az ügy megnevezése">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="case-description">Leírás</label>
+                        <textarea id="case-description" placeholder="Az ügy részletes leírása"></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Mentés</button>
+                        <button type="reset" class="btn-secondary">Törlés</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Új munka felvétele Card -->
+            <div class="card">
+                <h2>Új munka felvétele</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="case-select">Ügy kiválasztása</label>
+                        <select id="case-select">
+                            <option value="">-- Válassz egy ügyet --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="work-date">Munkadátum</label>
+                        <input type="date" id="work-date">
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="start-time">Kezdési idő</label>
+                            <input type="time" id="start-time">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="end-time">Befejezési idő</label>
+                            <input type="time" id="end-time">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Mentés</button>
+                        <button type="reset" class="btn-secondary">Törlés</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
