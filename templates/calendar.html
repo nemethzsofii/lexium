@@ -1,0 +1,71 @@
+{% extends "layout.html" %} {% block title %}Munka Naptár - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="mb-4">Munka Naptár</h1>
+
+<!-- Month selector -->
+<form
+  id="monthForm"
+  method="get"
+  style="margin-bottom: 20px; text-align: center"
+>
+  <input
+    type="month"
+    name="month"
+    value="{{ current_year }}-{{ '%02d'|format(current_month) }}"
+    onchange="document.getElementById('monthForm').submit()"
+    style="font-size: 1.1em; padding: 5px"
+  />
+</form>
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed">
+  <thead style="background-color: #f0f0f0">
+    <tr>
+      <th style="width: 14%">Sun</th>
+      <th style="width: 14%">Mon</th>
+      <th style="width: 14%">Tue</th>
+      <th style="width: 14%">Wed</th>
+      <th style="width: 14%">Thu</th>
+      <th style="width: 14%">Fri</th>
+      <th style="width: 14%">Sat</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for week in month_days %}
+    <tr>
+      {% for day in week %}
+      <td
+        style="
+          vertical-align: top;
+          padding: 5px;
+          height: 150px;
+          overflow: hidden;
+          border: 1px solid #ddd;
+        "
+      >
+        <strong>{{ day.date.day }}</strong>
+        {% for cw in day.works %}
+        <div
+          style="
+            margin-top: 2px;
+            padding: 2px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          "
+        >
+          {{ cw.start_time.strftime("%H:%M") }}–{{ cw.end_time.strftime("%H:%M")
+          }}<br />
+          {{ cw.case.number }} – {{ cw.case.name }}<br />
+          <em>{{ cw.user.username }}</em>
+        </div>
+        {% endfor %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

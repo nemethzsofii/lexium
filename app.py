@@ -1,0 +1,256 @@
+from flask import Flask, redirect, render_template, request, jsonify
+import traceback as tb
+from db import db, init_db
+import models as md
+import db_utils as dbu
+from datetime import time
+
+def create_app(config=None):
+    app = Flask(__name__)
+
+    if config:
+        app.config.update(config)
+
+    init_db(app)
+    register_routes(app)
+    return app
+
+
+def register_routes(app):
+    @app.route('/')
+    def home():
+        return render_template("home.html")
+    
+    @app.route("/case-work-input", methods=["GET"])
+    def case_work_input():
+        users = dbu.get_all_users()
+        cases = dbu.get_all_cases()
+        return render_template("case_work_input.html",
+                            users=users,
+                            cases=cases)
+
+
+    @app.route("/add-case-work", methods=["POST"])
+    def add_case_work_route():
+        user_id = request.form.get("user_id")
+        case_id = request.form.get("case_id")
+        date = request.form.get("date")
+        start_time = request.form.get("start_time")
+        end_time = request.form.get("end_time")
+
+        dbu.create_case_work(user_id, case_id, date, start_time, end_time)
+
+        return redirect("/case-work-input")
+    
+    @app.route("/case-work-table", methods=["GET"])
+    def case_work_table():
+        case_works = dbu.get_all_case_works()
+        return render_template("case_work_table.html", case_works=case_works)
+
+    
+    @app.route("/case-input", methods=["GET"])
+    def case_input():
+        clients = dbu.get_all_clients()
+
+        return render_template("case_input.html", clients=clients, companies=dbu.get_all_outsource_companies())
+
+
+    @app.route('/get-users', methods=['GET'])
+    def get_users():
+        try:
+            users = md.User.query.all()
+            return jsonify([
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email
+                } for u in users
+            ])
+        except Exception as e:
+            print(tb.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/get-cases', methods=['GET'])
+    def get_cases():
+        try:
+            cases = md.Case.query.all()
+            return jsonify([
+                {
+                    "id": c.id,
+                    "number": c.number,
+                    "name": c.name,
+                    "client_id": c.client_id,
+                    "description": c.description
+                } for c in cases
+            ])
+        except Exception as e:
+            print(tb.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/save-case', methods=['POST'])
+    def save_case():
+        try:
+            data = request.form
+
+            # 1️⃣ Create the new Case
+            new_case = md.Case.create(
+                name=data.get('case-name'),
+                client_id=int(data.get('client-id')),
+                description=data.get('case-description')
+            )
+
+            # 2️⃣ Update is_outsourced flag
+            is_outsourced = data.get('is-outsourced') == 'on'
+            new_case.is_outsourced = is_outsourced
+
+            # 3️⃣ Assign allowed companies if outsourced
+            if is_outsourced:
+                selected_company_ids = data.getlist('allowed-companies')  # multi-select
+                for comp_id in selected_company_ids:
+                    company = md.OutsourceCompany.query.get(int(comp_id))
+                    if company:
+                        # create CaseOutsourceMap entry
+                        mapping = md.CaseOutsourceMap(case=new_case, company=company)
+                        db.session.add(mapping)
+
+            # 4️⃣ Commit everything
+            db.session.commit()
+
+            return render_template("case_input.html", message="Sikeresen elmentve!")
+
+        except Exception as e:
+            db.session.rollback()
+            print(tb.format_exc())
+            return render_template("case_input.html", error="Hiba történt az ügy mentésekor.")
+
+    @app.route('/outsource-company', methods=['GET', 'POST'])
+    def outsource_company():
+        if request.method == 'POST':
+            try:
+                name = request.form.get('company-name')
+                tax_number = request.form.get('tax-number')
+
+                if not name:
+                    return render_template('outsource_company.html', error="A név megadása kötelező.")
+
+                # Create the new OutsourceCompany
+                new_company = md.OutsourceCompany(name=name, tax_number=tax_number)
+                db.session.add(new_company)
+                db.session.commit()
+
+                return render_template('outsource_company.html', message="Sikeresen hozzáadva!")
+
+            except Exception as e:
+                db.session.rollback()
+                print(tb.format_exc())
+                return render_template('outsource_company.html', error="Hiba történt a mentés során.")
+
+        # GET request
+        return render_template('outsource_company.html')
+
+    @app.route("/case-table", methods=["GET"])
+    def case_table():
+        cases = dbu.get_all_cases()
+        return render_template("case_table.html", cases=cases)
+    
+    from flask import render_template
+    from datetime import date, datetime, timedelta
+    from collections import defaultdict
+    import calendar
+    import db_utils as dbu
+
+    from flask import request
+    import calendar
+    from datetime import date, datetime, timedelta
+
+    @app.route("/calendar")
+    def calendar_view():
+        # Get month from query params or use current month
+        month_str = request.args.get("month")
+        if month_str:
+            try:
+                current_date = datetime.strptime(month_str, "%Y-%m")
+            except ValueError:
+                current_date = datetime.today()
+        else:
+            current_date = datetime.today()
+
+        current_year = current_date.year
+        current_month = current_date.month
+
+        # Build month days grid
+        first_day = date(current_year, current_month, 1)
+        _, num_days = calendar.monthrange(current_year, current_month)
+
+        # Create list of weeks
+        month_days = []
+        week = []
+
+        # Fill initial empty days
+        for _ in range(first_day.weekday() + 1):  # Mon=0..Sun=6
+            week.append({"date": None, "works": []})
+
+        for day in range(1, num_days + 1):
+            day_date = date(current_year, current_month, day)
+            # Fetch works for this day
+            works = dbu.get_case_works_by_date(day_date)
+            week.append({"date": day_date, "works": works})
+            if len(week) == 7:
+                month_days.append(week)
+                week = []
+
+        # Fill remaining week
+        if week:
+            while len(week) < 7:
+                week.append({"date": None, "works": []})
+            month_days.append(week)
+
+        return render_template(
+            "calendar.html",
+            month_days=month_days,
+            current_year=current_year,
+            current_month=current_month
+        )
+
+
+
+    
+    @app.route("/client-table", methods=["GET"])
+    def client_table():
+        # Fetch all clients
+        clients = dbu.get_all_clients()
+        return render_template("client_table.html", clients=clients)
+
+    @app.route("/client-input", methods=["GET"])
+    def client_input():
+        return render_template("client_input.html")
+
+    @app.route("/add-client", methods=["POST"])
+    def add_client():
+        client_type = request.form.get("client_type")
+        client_code = request.form.get("client_code")
+        name = request.form.get("name")
+        tax_number = request.form.get("tax_number")
+
+        if client_type == "PERSON":
+            birth_date = request.form.get("birth_date")
+            address = request.form.get("address")
+            new_client = md.ClientPerson(
+                client_code=client_code,
+                name=name,
+                tax_number=tax_number,
+                birth_date=birth_date,
+                address=address
+            )
+        else:
+            headquarters = request.form.get("headquarters")
+            new_client = md.ClientCompany(
+                client_code=client_code,
+                name=name,
+                tax_number=tax_number,
+                headquarters=headquarters
+            )
+
+        db.session.add(new_client)
+        db.session.commit()
+        return redirect("/client-input")

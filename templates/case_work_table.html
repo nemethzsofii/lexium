@@ -1,0 +1,42 @@
+{% extends "layout.html" %} {% block title %}Munkák - Jogügyleti Nyilvántartó{%
+endblock %} {% block content %}
+<h1 class="mb-4">Rögzített munkák</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% if case_works is not defined %}
+    <p>Betöltés...</p>
+    {% elif case_works|length == 0 %}
+    <p>Nincs még rögzített munka.</p>
+    {% else %}
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Felhasználó</th>
+            <th>Ügy</th>
+            <th>Dátum</th>
+            <th>Kezdés</th>
+            <th>Befejezés</th>
+            <th>Leírás</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cw in case_works %}
+          <tr>
+            <td>{{ cw.id }}</td>
+            <td>{{ cw.user.username }}</td>
+            <td>{{ cw.case.number }} – {{ cw.case.name }}</td>
+            <td>{{ cw.date }}</td>
+            <td>{{ cw.start_time }}</td>
+            <td>{{ cw.end_time }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "layout.html" %} {% block title %}Új munka rögzítése - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="mb-4">Új munka rögzítése</h1>
+
+<div class="row g-4">
+  <!-- ===================== -->
+  <!-- Case Work Form -->
+  <!-- ===================== -->
+  <div class="card shadow-sm h-100">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Új munkalap rögzítése</h5>
+
+      <form method="post" action="/add-case-work">
+        <!-- User -->
+        <div class="mb-3">
+          <label class="form-label">Felhasználó</label>
+          <select class="form-select" name="user_id" required>
+            <option value="">-- válassz felhasználót --</option>
+            {% for user in users %}
+            <option value="{{ user.id }}">{{ user.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Case -->
+        <div class="mb-3">
+          <label class="form-label">Ügy</label>
+          <select class="form-select" name="case_id" required>
+            <option value="">-- válassz ügyet --</option>
+            {% for case in cases %}
+            <option value="{{ case.id }}">
+              {{ case.number }} – {{ case.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Date -->
+        <div class="mb-3">
+          <label class="form-label">Dátum</label>
+          <input class="form-control" type="date" name="date" required />
+        </div>
+
+        <!-- Start time -->
+        <div class="mb-3">
+          <label class="form-label">Kezdés</label>
+          <input class="form-control" type="time" name="start_time" required />
+        </div>
+
+        <!-- End time -->
+        <div class="mb-3">
+          <label class="form-label">Befejezés</label>
+          <input class="form-control" type="time" name="end_time" required />
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary flex-fill">
+            Mentés
+          </button>
+          <button type="reset" class="btn btn-outline-secondary flex-fill">
+            Törlés
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

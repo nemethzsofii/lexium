@@ -1,0 +1,95 @@
+{% extends "layout.html" %} {% block title %}Új ügy felvétele - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="text-center text-white mb-5">Új Adatok Felvétele</h1>
+
+<div class="row g-4">
+  <!-- ===================== -->
+  <!-- ÚJ ÜGY FELVÉTELE -->
+  <!-- ===================== -->
+  <div class="card shadow-sm h-100">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Új ügy felvétele</h5>
+
+      <form id="caseForm" method="post" action="/save-case">
+        <div class="mb-3">
+          <label class="form-label">Ügyfél</label>
+          <select class="form-select" name="client-id" required>
+            <option value="">-- válassz ügyfelet --</option>
+            {% for client in clients %}
+            <option value="{{ client.id }}">{{ client.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Ügy megnevezése</label>
+          <input
+            class="form-control"
+            name="case-name"
+            placeholder="Az ügy megnevezése"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Leírás</label>
+          <textarea
+            class="form-control"
+            name="case-description"
+            rows="4"
+            placeholder="Az ügy részletes leírása"
+          ></textarea>
+        </div>
+
+        <!-- Outsourced checkbox -->
+        <div class="form-check mb-3">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="isOutsourced"
+            name="is-outsourced"
+          />
+          <label class="form-check-label" for="isOutsourced">
+            Bedolgozás (külsős cég)
+          </label>
+        </div>
+
+        <!-- Allowed companies multi-select -->
+        <div class="mb-3" id="allowedCompaniesDiv" style="display: none">
+          <label class="form-label">Bedolgozható cégek</label>
+          <select class="form-select" name="allowed-companies" multiple>
+            {% for company in companies %}
+            <option value="{{ company.id }}">{{ company.name }}</option>
+            {% endfor %}
+          </select>
+          <small class="text-muted"
+            >Csak akkor használd, ha Bedolgozás van kijelölve</small
+          >
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-fill">
+            Mentés
+          </button>
+          <button type="reset" class="btn btn-outline-secondary flex-fill">
+            Törlés
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  const isOutsourcedCheckbox = document.getElementById('isOutsourced');
+  const allowedCompaniesDiv = document.getElementById('allowedCompaniesDiv');
+
+  isOutsourcedCheckbox.addEventListener('change', function () {
+    if (this.checked) {
+      allowedCompaniesDiv.style.display = 'block';
+    } else {
+      allowedCompaniesDiv.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}
