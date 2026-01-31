@@ -96,7 +96,9 @@ def register_routes(app):
             new_case = md.Case.create(
                 name=data.get('case-name'),
                 client_id=int(data.get('client-id')),
-                description=data.get('case-description')
+                description=data.get('case-description'),
+                billing_type=md.BillingType(data.get('billing_type')),
+                rate_amount=float(data.get('rate_amount', 0.0))
             )
 
             # 2️⃣ Update is_outsourced flag

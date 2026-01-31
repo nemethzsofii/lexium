@@ -44,7 +44,7 @@ class Case(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     is_outsourced = db.Column(db.Boolean, default=False, nullable=False)
-    billing_type = db.Column(Enum(BillingType), nullable=False, default=BillingType.FIXED)
+    billing_type = db.Column(Enum(BillingType, values_callable=lambda enum: [e.value for e in enum]), nullable=False,default=BillingType.FIXED)
     rate_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
 
     # Relationships
