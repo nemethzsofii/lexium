@@ -132,6 +132,7 @@ class CaseWork(db.Model):
     date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
 
     # Relationships
     user = db.relationship("User", back_populates="case_works")
@@ -147,7 +148,8 @@ class CaseWork(db.Model):
             "case_id": self.case_id,
             "date": self.date,
             "start_time": self.start_time,
-            "end_time": self.end_time
+            "end_time": self.end_time,
+            "description": self.description
         }
 
 

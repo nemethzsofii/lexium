@@ -37,8 +37,9 @@ def register_routes(app):
         date = request.form.get("date")
         start_time = request.form.get("start_time")
         end_time = request.form.get("end_time")
+        description = request.form.get("description")
 
-        dbu.create_case_work(user_id, case_id, date, start_time, end_time)
+        dbu.create_case_work(user_id, case_id, date, start_time, end_time, description)
 
         return redirect("/case-work-input")
     

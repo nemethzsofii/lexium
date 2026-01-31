@@ -98,13 +98,14 @@ def delete_case(case_id):
 # CaseWork utilities
 # --------------------
 
-def create_case_work(user_id, case_id, date, start_time, end_time):
+def create_case_work(user_id, case_id, date, start_time, end_time, description=None):
     case_work = CaseWork(
         user_id=user_id,
         case_id=case_id,
         date=date,
         start_time=start_time,
-        end_time=end_time
+        end_time=end_time,
+        description=description
     )
     return add_instance(case_work)
 
