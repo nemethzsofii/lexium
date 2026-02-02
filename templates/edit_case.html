@@ -1,0 +1,145 @@
+{% extends "layout.html" %} {% block title %}Ügy szerkesztése - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="mb-4">Ügy szerkesztése</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="POST">
+      <!-- Case name -->
+      <div class="mb-3">
+        <label class="form-label">Ügy neve</label>
+        <input
+          type="text"
+          class="form-control"
+          name="case-name"
+          value="{{ case.name }}"
+          required
+        />
+      </div>
+
+      <!-- Client -->
+      <!-- Client -->
+      <div class="mb-3">
+        <label class="form-label">Ügyfél</label>
+        <select class="form-select" name="client-id" required>
+          {% for client in clients %}
+          <option
+            value="{{ client.id }}"
+            {%
+            if
+            client.id=="case.client_id"
+            %}selected{%
+            endif
+            %}
+          >
+            {{ client.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label">Leírás</label>
+        <textarea class="form-control" name="case-description" rows="4">
+{{ case.description or "" }}</textarea
+        >
+      </div>
+
+      <!-- Billing type -->
+      <div class="mb-3">
+        <label class="form-label d-block">Díjazás típusa</label>
+
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="billing_type"
+            id="billingHourly"
+            value="hourly"
+            {%
+            if
+            case.billing_type.value=="hourly"
+            %}checked{%
+            endif
+            %}
+          />
+          <label class="form-check-label" for="billingHourly"> Óradíj </label>
+        </div>
+
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="billing_type"
+            id="billingFixed"
+            value="fixed"
+            {%
+            if
+            case.billing_type.value=="fixed"
+            %}checked{%
+            endif
+            %}
+          />
+          <label class="form-check-label" for="billingFixed"> Fix díj </label>
+        </div>
+      </div>
+
+      <!-- Rate -->
+      <div class="mb-3">
+        <label class="form-label" id="rateLabel">
+          {% if case.billing_type.value == "hourly" %} Óradíj (HUF) {% else %}
+          Fix díj (HUF) {% endif %}
+        </label>
+        <input
+          type="number"
+          class="form-control"
+          name="rate_amount"
+          min="0"
+          step="0.01"
+          value="{{ case.rate_amount }}"
+          required
+        />
+      </div>
+
+      <!-- Outsourced -->
+      <div class="form-check mb-4">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="is_outsourced"
+          id="isOutsourced"
+          {%
+          if
+          case.is_outsourced
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="isOutsourced">
+          Kiszervezett ügy
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Mentés</button>
+        <a href="{{ url_for('case_table') }}" class="btn btn-outline-secondary">
+          Mégse
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const rateLabel = document.getElementById('rateLabel');
+
+  document.querySelectorAll('input[name="billing_type"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      rateLabel.textContent =
+        radio.value === 'hourly' ? 'Óradíj (HUF)' : 'Fix díj (HUF)';
+    });
+  });
+</script>
+{% endblock %}

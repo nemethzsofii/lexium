@@ -1,4 +1,5 @@
-from flask import Flask, redirect, render_template, request, jsonify
+from decimal import Decimal
+from flask import Flask, app, flash, redirect, render_template, request, jsonify, url_for
 import traceback as tb
 from db import db, init_db
 import models as md
@@ -29,6 +30,42 @@ def register_routes(app):
                             users=users,
                             cases=cases)
 
+    @app.route("/edit-case/<int:case_id>", methods=["GET", "POST"])
+    def edit_case(case_id):
+        case = db.session.get(md.Case, case_id)
+        if not case:
+            return jsonify({"message": "Case not found"}), 404
+
+        if request.method == "POST":
+            case.name = request.form.get("case-name")
+            case.description = request.form.get("case-description")
+            case.client_id = int(request.form.get("client-id"))
+            case.is_outsourced = "is_outsourced" in request.form
+
+            case.billing_type = md.BillingType(request.form.get("billing_type"))
+            case.rate_amount = Decimal(request.form.get("rate_amount", "0.00"))
+
+            db.session.commit()
+            return redirect(url_for("case_table"))
+        elif request.method == "GET":
+            return render_template(
+                "edit_case.html",
+                case=case,
+                clients=dbu.get_all_clients(),
+                BillingType=md.BillingType
+            )
+        else:
+            return jsonify({"message": "Method not allowed"}), 405
+
+    @app.route("/delete-case/<int:case_id>")
+    def delete_case(case_id):
+        case = md.Case.query.get_or_404(case_id)
+
+        db.session.delete(case)
+        db.session.commit()
+
+        flash("Az ügy sikeresen törölve lett.", "success")
+        return redirect(url_for("case_table"))
 
     @app.route("/add-case-work", methods=["POST"])
     def add_case_work_route():
