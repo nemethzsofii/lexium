@@ -1,22 +1,24 @@
+# db.py
 from flask_sqlalchemy import SQLAlchemy
 import os
-from urllib.parse import quote_plus
 
 db = SQLAlchemy()
 
-def init_db(app):
-    """Initialize database with Flask app"""
-    DB_USER = os.environ.get("DB_USER")
-    DB_PASS = quote_plus(os.environ.get("DB_PASS"))
-    DB_HOST = os.environ.get("DB_HOST")
-    DB_PORT = os.environ.get("DB_PORT")
-    DB_NAME = os.environ.get("DB_NAME")
+APP_NAME = "Lexium"
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = (
-        f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
-    )
+def get_appdata_path():
+    base_path = os.getenv("LOCALAPPDATA")
+    app_path = os.path.join(base_path, APP_NAME)
+    os.makedirs(app_path, exist_ok=True)
+    return app_path
+
+def init_db(app):
+    appdata_path = get_appdata_path()
+    db_path = os.path.join(appdata_path, "database.db")
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_ECHO"] = True
+    app.config["SQLALCHEMY_ECHO"] = False
 
     db.init_app(app)
 

@@ -18,7 +18,6 @@ Nyilvántartó{% endblock %} {% block content %}
       </div>
 
       <!-- Client -->
-      <!-- Client -->
       <div class="mb-3">
         <label class="form-label">Ügyfél</label>
         <select class="form-select" name="client-id" required>
@@ -44,6 +43,26 @@ Nyilvántartó{% endblock %} {% block content %}
         <textarea class="form-control" name="case-description" rows="4">
 {{ case.description or "" }}</textarea
         >
+      </div>
+	  
+	  <!-- Case Type -->
+      <div class="mb-3">
+        <label class="form-label">Ügytípus</label>
+        <select class="form-select" name="case-type-id" required>
+          {% for case_type in case_types %}
+          <option
+            value="{{ case_type.id }}"
+            {%
+            if
+            case_type.id=="case.case_type_id"
+            %}selected{%
+            endif
+            %}
+          >
+            {{ case_type.name }}
+          </option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- Billing type -->
@@ -120,6 +139,23 @@ Nyilvántartó{% endblock %} {% block content %}
           Kiszervezett ügy
         </label>
       </div>
+	  
+	  <!-- Allowed company single-select -->
+        <div class="mb-3" id="allowedCompaniesDiv" style="display: none">
+          <label class="form-label">Bedolgozható cég</label>
+          <select class="form-select" name="outsource_company_id">
+            <option value="">-- Válassz céget --</option>
+            {% for company in companies %}
+            <option value="{{ company.id }}">{{ company.name }}</option>
+			{%
+            if
+            company.id=="case.outsource_company_id"
+            %}selected{%
+            endif
+            %}
+            {% endfor %}
+          </select>
+        </div>
 
       <!-- Actions -->
       <div class="d-flex gap-2">
@@ -140,6 +176,18 @@ Nyilvántartó{% endblock %} {% block content %}
       rateLabel.textContent =
         radio.value === 'hourly' ? 'Óradíj (HUF)' : 'Fix díj (HUF)';
     });
+  });
+</script>
+<script>
+  const isOutsourcedCheckbox = document.getElementById('isOutsourced');
+  const allowedCompaniesDiv = document.getElementById('allowedCompaniesDiv');
+
+  isOutsourcedCheckbox.addEventListener('change', function () {
+    if (this.checked) {
+      allowedCompaniesDiv.style.display = 'block';
+    } else {
+      allowedCompaniesDiv.style.display = 'none';
+    }
   });
 </script>
 {% endblock %}

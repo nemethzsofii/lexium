@@ -1,0 +1,162 @@
+{% extends "layout.html" %} {% block title %}Riportok - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="text-center mb-5">Riportok</h1>
+
+<div class="row g-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-4">Ügyekre fordított munkaidő</h5>
+
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Ügyszám</th>
+              <th>Ügy neve</th>
+              <th>Ügyfél</th>
+              <th class="text-end">Ledolgozott idő (óra)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in reports1 %}
+            <tr>
+              <td>{{ row.case_number }}</td>
+              <td>{{ row.case_name }}</td>
+              <td>{{ row.client_name }}</td>
+              <td class="text-end">
+                {{ "%.2f"|format(row.total_hours or 0) }}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted">
+                Nincs megjeleníthető adat
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4" style="margin-top: 15px">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-4">Felhasználónkénti munkaidő</h5>
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Felhasználó</th>
+            <th class="text-end">Ledolgozott idő (óra)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in reports2 %}
+          <tr>
+            <td>{{ row.username }}</td>
+            <td class="text-end">
+              {{ "%.2f"|format((row.total_seconds or 0) / 3600) }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="2" class="text-center text-muted">Nincs adat</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4" style="margin-top: 15px">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-4">Nem számlázott munka</h5>
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Ügyszám</th>
+              <th>Ügy neve</th>
+              <th>Ügyfél</th>
+              <th class="text-end">Nem számlázott óra</th>
+              <th class="text-end">Becsült összeg</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in unbilled %}
+            <tr>
+              <td>{{ row.case_number }}</td>
+              <td>{{ row.case_name }}</td>
+              <td>{{ row.client_name }}</td>
+              <td class="text-end">
+                {{ "%.2f"|format(row.unbilled_hours or 0) }}
+              </td>
+              <td class="text-end fw-bold">
+                {{ "%.0f"|format(row.estimated_amount or 0) }} HUF
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center text-muted">
+                Nincs nem számlázott munka
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4 mt-4" style="margin-top: 15px">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-3">Nem számlázott órák ügyenként</h5>
+      <canvas id="unbilledChart"></canvas>
+    </div>
+  </div>
+</div>
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const unbilledLabels = [
+    {% for row in unbilled %}
+      "{{ row.case_number }}",
+    {% endfor %}
+  ];
+
+  const unbilledData = [
+    {% for row in unbilled %}
+      {{ row.unbilled_hours or 0 }},
+    {% endfor %}
+  ];
+
+  new Chart(document.getElementById('unbilledChart'), {
+    type: 'bar',
+    data: {
+      labels: unbilledLabels,
+      datasets: [{
+        label: 'Nem számlázott órák',
+        data: unbilledData
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Óra'
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %} {% endblock %}

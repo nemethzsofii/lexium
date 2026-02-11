@@ -1,5 +1,5 @@
 from db import db
-from models import Case, CaseWork, Client, ClientPerson, ClientCompany, User
+from models import Case, CaseWork, Client, ClientPerson, ClientCompany, User, CaseType
 from sqlalchemy.exc import SQLAlchemyError
 from models import CaseWork
 from sqlalchemy.orm import joinedload
@@ -93,7 +93,12 @@ def delete_case(case_id):
         return False
     return delete_instance(case)
 
+# --------------------
+# Case type utilities
+# --------------------
 
+def get_all_case_types():
+    return CaseType.query.all()
 # --------------------
 # CaseWork utilities
 # --------------------

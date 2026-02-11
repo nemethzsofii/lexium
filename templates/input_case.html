@@ -1,6 +1,6 @@
 {% extends "layout.html" %} {% block title %}Új ügy felvétele - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
-<h1 class="text-center mb-5">Új Adatok Felvétele</h1>
+<h1 class="text-center mb-5">Új Ügy Felvétele</h1>
 
 <div class="row g-4">
   <!-- ===================== -->
@@ -8,8 +8,6 @@ Nyilvántartó{% endblock %} {% block content %}
   <!-- ===================== -->
   <div class="card shadow-sm h-100">
     <div class="card-body">
-      <h5 class="card-title mb-3">Új ügy felvétele</h5>
-
       <form id="caseForm" method="post" action="/save-case">
         <div class="mb-3">
           <label class="form-label">Ügyfél</label>
@@ -39,6 +37,17 @@ Nyilvántartó{% endblock %} {% block content %}
             rows="4"
             placeholder="Az ügy részletes leírása"
           ></textarea>
+        </div>
+
+        <!-- Allowed company single-select -->
+        <div class="mb-3" id="caseTypeDiv">
+          <label class="form-label">Ügytípus</label>
+          <select class="form-select" name="case_type_id">
+            <option value="">-- Válassz Ügytípust --</option>
+            {% for case_type in case_types %}
+            <option value="{{ case_type.id }}">{{ case_type.name }}</option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="mb-3">

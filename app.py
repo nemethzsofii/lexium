@@ -1,8 +1,11 @@
 from decimal import Decimal
-from flask import Flask, flash, redirect, render_template, request, jsonify, url_for
+import os
+from flask import Flask, app, flash, redirect, render_template, request, jsonify, url_for, Blueprint
 import traceback as tb
 from datetime import date, datetime
 import calendar
+
+from sqlalchemy import case, func, text
 
 import db_utils as dbu
 from db import db, init_db
@@ -18,12 +21,111 @@ def create_app(config=None):
     register_routes(app)
     return app
 
-
 def register_routes(app):
     @app.route('/')
     def home():
         return render_template("home.html")
     
+    @app.route("/reports")
+    def reports():
+        # -----------------------------
+        # 1. Total worked hours per case
+        # -----------------------------
+        results1 = (
+            db.session.query(
+                md.Case.id.label("case_id"),
+                md.Case.number.label("case_number"),
+                md.Case.name.label("case_name"),
+                md.Client.name.label("client_name"),
+                (
+                    func.sum(
+                        func.timestampdiff(
+                            text("SECOND"),
+                            md.CaseWork.start_time,
+                            md.CaseWork.end_time
+                        )
+                    ) / 3600
+                ).label("total_hours")
+            )
+            .join(md.CaseWork)
+            .join(md.Client)
+            .group_by(md.Case.id, md.Client.name)
+            .order_by(md.Case.number)
+            .all()
+        )
+
+        # -----------------------------
+        # 2. Work per user
+        # -----------------------------
+        results2 = (
+            db.session.query(
+                md.User.username,
+                func.sum(
+                    func.timestampdiff(
+                        text("SECOND"),
+                        md.CaseWork.start_time,
+                        md.CaseWork.end_time
+                    )
+                ).label("total_seconds")
+            )
+            .join(md.CaseWork)
+            .group_by(md.User.username)
+            .order_by(func.sum(
+                func.timestampdiff(
+                    text("SECOND"),
+                    md.CaseWork.start_time,
+                    md.CaseWork.end_time
+                )
+            ).desc())
+            .all()
+        )
+
+        # -----------------------------
+        # 3. 🔥 UNBILLED WORK PER CASE
+        # -----------------------------
+        unbilled = (
+            db.session.query(
+                md.Case.number.label("case_number"),
+                md.Case.name.label("case_name"),
+                md.Client.name.label("client_name"),
+                (
+                    func.sum(
+                        func.timestampdiff(
+                            text("SECOND"),
+                            md.CaseWork.start_time,
+                            md.CaseWork.end_time
+                        )
+                    ) / 3600
+                ).label("unbilled_hours"),
+                case(
+                    (md.Case.billing_type == "hourly",
+                    (
+                        func.sum(
+                            func.timestampdiff(
+                                text("SECOND"),
+                                md.CaseWork.start_time,
+                                md.CaseWork.end_time
+                            )
+                        ) / 3600
+                    ) * md.Case.rate_amount),
+                    else_=md.Case.rate_amount
+                ).label("estimated_amount")
+            )
+            .join(md.CaseWork)
+            .join(md.Client)
+            .filter(md.CaseWork.billed == False)
+            .group_by(md.Case.id, md.Client.name)
+            .order_by(md.Case.number)
+            .all()
+        )
+
+        return render_template(
+            "reports.html",
+            reports1=results1,
+            reports2=results2,
+            unbilled=unbilled
+        )
+
     @app.route("/input_case_work", methods=["GET"])
     def input_case_work():
         users = dbu.get_all_users()
@@ -54,6 +156,8 @@ def register_routes(app):
                 "edit_case.html",
                 case=case,
                 clients=dbu.get_all_clients(),
+                case_types=dbu.get_all_case_types(),
+                companies=dbu.get_all_outsource_companies(),
                 BillingType=md.BillingType
             )
         else:
@@ -127,7 +231,9 @@ def register_routes(app):
     def input_case():
         clients = dbu.get_all_clients()
 
-        return render_template("input_case.html", clients=clients, companies=dbu.get_all_outsource_companies())
+        return render_template("input_case.html", clients=clients,
+                               companies=dbu.get_all_outsource_companies(),
+                               case_types=dbu.get_all_case_types())
 
 
     @app.route('/get-users', methods=['GET'])
@@ -176,7 +282,8 @@ def register_routes(app):
                 billing_type=md.BillingType(data.get('billing_type')),
                 rate_amount=float(data.get('rate_amount', 0.0)),
                 is_outsourced=data.get('is-outsourced') == 'on',
-                outsource_company_id=int(data.get('outsource_company_id')) if data.get('is-outsourced') == 'on' else None
+                outsource_company_id=int(data.get('outsource_company_id')) if data.get('is-outsourced') == 'on' else None,
+                case_type_id=int(data.get('case_type_id')) if data.get('case_type_id') else None
             )
 
             return render_template("input_case.html", message="Sikeresen elmentve!")
@@ -192,12 +299,13 @@ def register_routes(app):
             try:
                 name = request.form.get('company-name')
                 tax_number = request.form.get('tax-number')
+                short_name = request.form.get('company-short-name')
 
                 if not name:
                     return render_template('input_outsource_company.html', error="A név megadása kötelező.")
 
                 # Create the new OutsourceCompany
-                new_company = md.OutsourceCompany(name=name, tax_number=tax_number)
+                new_company = md.OutsourceCompany(name=name, tax_number=tax_number, short_name=short_name)
                 db.session.add(new_company)
                 db.session.commit()
 

@@ -57,6 +57,7 @@ endblock %} {% block content %}
             <th data-column="0" class="sortable">ID</th>
             <th data-column="1" class="sortable">Ügyszám</th>
             <th data-column="2" class="sortable">Név</th>
+            <th data-column="5" class="sortable">Ügytípus</th>
             <th data-column="3" class="sortable">Ügyfél</th>
             <th data-column="4" class="sortable">Leírás</th>
             <th>Műveletek</th>
@@ -68,6 +69,7 @@ endblock %} {% block content %}
             <td>{{ case.id }}</td>
             <td>{{ case.number }}</td>
             <td>{{ case.name }}</td>
+            <td>{{ case.case_type.name if case.case_type else '' }}</td>
             <td>{{ case.client.name if case.client else '' }}</td>
             <td>{{ case.description or '' }}</td>
             <td class="text-nowrap">

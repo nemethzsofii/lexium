@@ -1,6 +1,6 @@
 {% extends "layout.html" %} {% block title %}Új Bedolgozó Cég - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
-<h1 class="text-center text-white mb-5">Új Bedolgozó Cég Felvétele</h1>
+<h1 class="text-center mb-5">Új Bedolgozó Cég Felvétele</h1>
 
 <div class="row g-4 justify-content-center">
   <div class="card shadow-sm col-md-6">
@@ -20,6 +20,16 @@ Nyilvántartó{% endblock %} {% block content %}
             class="form-control"
             name="company-name"
             placeholder="Cég neve"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Cég rövid neve</label>
+          <input
+            class="form-control"
+            name="company-short-name"
+            placeholder="Cég rövid neve (Ügyszámhoz)"
             required
           />
         </div>

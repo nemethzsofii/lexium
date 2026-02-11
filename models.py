@@ -27,6 +27,28 @@ class User(db.Model):
             "last_name": self.last_name
         }
 
+class CaseType(db.Model):
+    __tablename__ = 'case_types'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(45), nullable=False, unique=True)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+
+    def __init__(self):
+        super().__init__()
+
+    def __repr__(self):
+        return f'<CaseType {self.id}: {self.name}>'
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "active": self.active,
+            "created_at": self.created_at
+        }
+
 class Case(db.Model):
     __tablename__ = 'cases'
 
@@ -39,11 +61,13 @@ class Case(db.Model):
     outsource_company_id = db.Column(db.Integer, db.ForeignKey('outsource_companies.id'), nullable=True)
     billing_type = db.Column(Enum(BillingType, values_callable=lambda enum: [e.value for e in enum]), nullable=False,default=BillingType.FIXED)
     rate_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    case_type_id = db.Column(db.Integer, db.ForeignKey('case_types.id'), nullable=True)
 
     # Relationships
     client = db.relationship("Client", back_populates="cases")
     works = db.relationship("CaseWork", back_populates="case", lazy=True)
     outsource_company = db.relationship("OutsourceCompany", backref="cases", lazy=True)
+    case_type = db.relationship("CaseType", backref="cases", lazy=True)
 
     def __repr__(self):
         return f'<Case {self.number}: {self.name}>'
@@ -60,7 +84,8 @@ class Case(db.Model):
         }
 
     @staticmethod
-    def create(name, client_id, description=None, billing_type=BillingType.FIXED, rate_amount=0.00, is_outsourced=False, outsource_company_id=None):
+    def create(name, client_id, description=None, billing_type=BillingType.FIXED, rate_amount=0.00, 
+               is_outsourced=False, outsource_company_id=None, case_type_id=None):
         if is_outsourced and not outsource_company_id:
             raise ValueError("Outsource company must be specified for outsourced cases.")
 
@@ -72,7 +97,8 @@ class Case(db.Model):
             billing_type=billing_type,
             rate_amount=rate_amount,
             is_outsourced=is_outsourced,
-            outsource_company_id=outsource_company_id
+            outsource_company_id=outsource_company_id,
+            case_type_id=case_type_id
         )
 
         db.session.add(new_case)
@@ -98,6 +124,11 @@ class OutsourceCompany(db.Model):
 
     def __repr__(self):
         return f'<OutsourceCompany {self.id}: {self.name}>'
+    
+    def __init__(self, name=None, tax_number=None, short_name=None):
+        self.name = name
+        self.tax_number = tax_number
+        self.short_name = short_name
 
 class CaseWork(db.Model):
     __tablename__ = 'case_work'
