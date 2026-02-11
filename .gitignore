@@ -61,3 +61,12 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+Output/mysetup.exe
+Output/lexiumsetup.exe
+Lexium.spec
+MyApp.spec
+InfoBeforeFile.iss
+InfoBeforeFile.txt
+InnoSetup.iss
+MyApp.spec
+MyApp.spec
