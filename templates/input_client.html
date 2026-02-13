@@ -1,14 +1,19 @@
-{% extends "layout.html" %} {% block title %}Új ügyfél felvétele - Jogügyleti
+{% extends "layout.html" %} {% block title %}Új Ügyfél - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
-<h1 class="text-center mb-5">Új ügyfél felvétele</h1>
+<h1 class="text-center mb-5">Új Ügyfél Felvétele</h1>
 
-<div class="row g-4">
-  <!-- ===================== -->
-  <!-- ÚJ ÜGYFÉL FELVÉTELE -->
-  <!-- ===================== -->
-  <div class="card shadow-sm h-100">
+<div class="row g-4 justify-content-center">
+  <div class="card shadow-sm col-md-6">
     <div class="card-body">
-      <form id="clientForm" method="post" action="/add-client">
+      <h5 class="card-title mb-3">Ügyfél adatai</h5>
+
+      {% if message %}
+      <div class="alert alert-success">{{ message }}</div>
+      {% endif %} {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <form id="clientForm" method="post">
         <!-- Client Type -->
         <div class="mb-4">
           <label class="form-label d-block">Ügyféltípus</label>
@@ -100,7 +105,6 @@ Nyilvántartó{% endblock %} {% block content %}
             />
           </div>
         </div>
-
         <!-- Buttons -->
         <div class="d-flex gap-2 mt-4">
           <button type="submit" class="btn btn-primary flex-fill">

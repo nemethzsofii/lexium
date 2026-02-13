@@ -412,9 +412,6 @@ def register_routes(app):
             current_year=current_year,
             current_month=current_month
         )
-
-
-
     
     @app.route("/client-table", methods=["GET"])
     def client_table():
@@ -422,36 +419,47 @@ def register_routes(app):
         clients = dbu.get_all_clients()
         return render_template("client_table.html", clients=clients)
 
-    @app.route("/input_client", methods=["GET"])
+    @app.route('/input_client', methods=['GET', 'POST'])
     def input_client():
-        return render_template("input_client.html")
+        if request.method == 'POST':
+            try:
+                client_type = request.form.get("client_type")
+                client_code = request.form.get("client_code")
+                name = request.form.get("name")
+                tax_number = request.form.get("tax_number")
+
+                if client_type == "PERSON":
+                    birth_date = request.form.get("birth_date")
+                    address = request.form.get("address")
+                    new_client = md.ClientPerson(
+                        client_code=client_code,
+                        name=name,
+                        tax_number=tax_number,
+                        birth_date=birth_date,
+                        address=address
+                    )
+                else:
+                    headquarters = request.form.get("headquarters")
+                    new_client = md.ClientCompany(
+                        client_code=client_code,
+                        name=name,
+                        tax_number=tax_number,
+                        headquarters=headquarters
+                    )
+
+                db.session.add(new_client)
+                db.session.commit()
+                return render_template('input_client.html', message="Sikeresen hozzáadva!")
+
+            except Exception as e:
+                db.session.rollback()
+                print(tb.format_exc())
+                return render_template('input_client.html', error="Hiba történt a mentés során.")
+
+        # GET request
+        return render_template('input_client.html')
 
     @app.route("/add-client", methods=["POST"])
     def add_client():
-        client_type = request.form.get("client_type")
-        client_code = request.form.get("client_code")
-        name = request.form.get("name")
-        tax_number = request.form.get("tax_number")
-
-        if client_type == "PERSON":
-            birth_date = request.form.get("birth_date")
-            address = request.form.get("address")
-            new_client = md.ClientPerson(
-                client_code=client_code,
-                name=name,
-                tax_number=tax_number,
-                birth_date=birth_date,
-                address=address
-            )
-        else:
-            headquarters = request.form.get("headquarters")
-            new_client = md.ClientCompany(
-                client_code=client_code,
-                name=name,
-                tax_number=tax_number,
-                headquarters=headquarters
-            )
-
-        db.session.add(new_client)
-        db.session.commit()
+        
         return redirect("/input_client")
