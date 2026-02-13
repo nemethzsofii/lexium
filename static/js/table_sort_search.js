@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
               bText = new Date(bText);
               break;
 
+            case 'boolean':
+              aText = parseInt(a.children[index].dataset.value);
+              bText = parseInt(b.children[index].dataset.value);
+              break;
+
             default:
               return direction === 'asc'
                 ? aText.localeCompare(bText, undefined, { numeric: true })
