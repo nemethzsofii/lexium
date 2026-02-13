@@ -16,11 +16,24 @@ def create_app(config=None):
 
     if config:
         app.config.update(config)
+    app.config["SECRET_KEY"] = get_or_create_secret_key()
 
     init_db(app)
     register_routes(app)
     return app
 
+def get_or_create_secret_key():
+    key_file = "static/files/secret_key.txt"
+
+    if os.path.exists(key_file):
+        with open(key_file, "r") as f:
+            return f.read().strip()
+    else:
+        key = secrets.token_hex(32)
+        with open(key_file, "w") as f:
+            f.write(key)
+        return key
+    
 def register_routes(app):
     @app.route('/')
     def home():
