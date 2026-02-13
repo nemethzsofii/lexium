@@ -1,14 +1,19 @@
-{% extends "layout.html" %} {% block title %}Új ügy felvétele - Jogügyleti
-Nyilvántartó{% endblock %} {% block content %}
+{% extends "layout.html" %} {% block title %}Új Ügy - Jogügyleti Nyilvántartó{%
+endblock %} {% block content %}
 <h1 class="text-center mb-5">Új Ügy Felvétele</h1>
 
-<div class="row g-4">
-  <!-- ===================== -->
-  <!-- ÚJ ÜGY FELVÉTELE -->
-  <!-- ===================== -->
-  <div class="card shadow-sm h-100">
+<div class="row g-4 justify-content-center">
+  <div class="card shadow-sm col-md-6">
     <div class="card-body">
-      <form id="caseForm" method="post" action="/save-case">
+      <h5 class="card-title mb-3">Ügy adatai</h5>
+
+      {% if message %}
+      <div class="alert alert-success">{{ message }}</div>
+      {% endif %} {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <form id="caseForm" method="post">
         <div class="mb-3">
           <label class="form-label">Ügyfél</label>
           <select class="form-select" name="client-id" required>
@@ -125,7 +130,7 @@ Nyilvántartó{% endblock %} {% block content %}
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %}{% block extra_js %}
 <script>
   const isOutsourcedCheckbox = document.getElementById('isOutsourced');
   const allowedCompaniesDiv = document.getElementById('allowedCompaniesDiv');

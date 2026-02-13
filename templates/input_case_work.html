@@ -1,16 +1,19 @@
-{% extends "layout.html" %} {% block title %}Új munka rögzítése - Jogügyleti
+{% extends "layout.html" %} {% block title %}Új Munkalap - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
-<h1 class="text-center mb-5">Új munka rögzítése</h1>
+<h1 class="text-center mb-5">Új Munkalap Felvétele</h1>
 
-<div class="row g-4">
-  <!-- ===================== -->
-  <!-- Case Work Form -->
-  <!-- ===================== -->
-  <div class="card shadow-sm h-100">
+<div class="row g-4 justify-content-center">
+  <div class="card shadow-sm col-md-6">
     <div class="card-body">
-      <h5 class="card-title mb-3">Új munkalap rögzítése</h5>
+      <h5 class="card-title mb-3">Munka adatai</h5>
 
-      <form method="post" action="/add-case-work">
+      {% if message %}
+      <div class="alert alert-success">{{ message }}</div>
+      {% endif %} {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <form method="post">
         <!-- User -->
         <div class="mb-3">
           <label class="form-label">Felhasználó</label>
