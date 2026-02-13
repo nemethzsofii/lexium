@@ -18,6 +18,11 @@ class User(db.Model):
     # Relationship with CaseWork
     case_works = db.relationship("CaseWork", back_populates="user", lazy=True)
 
+    def __init__(self, username=None, first_name=None, last_name=None):
+        self.username = username
+        self.first_name = first_name
+        self.last_name = last_name
+        
     def __repr__(self):
         return f'<User {self.id}: {self.username}>'
 

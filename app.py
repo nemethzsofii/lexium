@@ -316,6 +316,35 @@ def register_routes(app):
                                companies=dbu.get_all_outsource_companies(),
                                case_types=dbu.get_all_case_types())
 
+    @app.route('/input_user', methods=['GET', 'POST'])
+    def input_user():
+        if request.method == 'POST':
+            try:
+                username = request.form.get('username')
+                first_name = request.form.get('first_name')
+                last_name = request.form.get('last_name')
+
+                if not username:
+                    return render_template('input_user.html', error="A felhasználónév megadása kötelező.")
+                if not first_name:
+                    return render_template('input_user.html', error="A vezetéknév megadása kötelező.")
+                if not last_name:
+                    return render_template('input_user.html', error="A keresztnév megadása kötelező.")
+                
+                new_user = md.User(username=username, first_name=first_name, last_name=last_name)
+                db.session.add(new_user)
+                db.session.commit()
+
+                return render_template('input_user.html', message="Sikeresen hozzáadva!")
+
+            except Exception as e:
+                db.session.rollback()
+                print(tb.format_exc())
+                return render_template('input_user.html', error="Hiba történt a mentés során.")
+
+        # GET request
+        return render_template('input_user.html')
+    
     @app.route('/get-users', methods=['GET'])
     def get_users():
         try:
