@@ -158,10 +158,36 @@ def register_routes(app):
             flash("Hiba történt a bedolgozó cég törlésekor.", "danger")
             return redirect(url_for("outsource_company_table"))
 
-    @app.route("/input_case_work", methods=["GET"])
+    @app.route("/input_case_work", methods=["GET", "POST"])
     def input_case_work():
         users = dbu.get_all_users()
         cases = dbu.get_all_cases()
+        if request.method == "POST":
+            try:
+                user_id = int(request.form.get("user_id"))
+                case_id = int(request.form.get("case_id"))
+                date = request.form.get("date")
+                start_time = request.form.get("start_time")
+                end_time = request.form.get("end_time")
+                description = request.form.get("description")
+                if not all([user_id, case_id, date, start_time, end_time]):
+                    return render_template("input_case_work.html",
+                                        users=users,
+                                        cases=cases,
+                                        error="Minden mező kitöltése kötelező!")
+
+                dbu.create_case_work(user_id, case_id, date, start_time, end_time, description)
+                return render_template("input_case_work.html",
+                                    users=users,
+                                    cases=cases,
+                                    message="Munkalap sikeresen elmentve!")
+            except Exception as e:
+                print(tb.format_exc())
+                return render_template("input_case_work.html",
+                                    users=users,
+                                    cases=cases,
+                                    error="Hiba történt a munkalap mentésekor.")
+        # GET request
         return render_template("input_case_work.html",
                             users=users,
                             cases=cases)
@@ -239,19 +265,6 @@ def register_routes(app):
 
         flash("Az ügy sikeresen törölve lett.", "success")
         return redirect(url_for("case_table"))
-
-    @app.route("/add-case-work", methods=["POST"])
-    def add_case_work_route():
-        user_id = request.form.get("user_id")
-        case_id = request.form.get("case_id")
-        date = request.form.get("date")
-        start_time = request.form.get("start_time")
-        end_time = request.form.get("end_time")
-        description = request.form.get("description")
-
-        dbu.create_case_work(user_id, case_id, date, start_time, end_time, description)
-
-        return redirect("/input_case_work")
     
     @app.route("/case-work-table", methods=["GET"])
     def case_work_table():
@@ -259,14 +272,49 @@ def register_routes(app):
         return render_template("case_work_table.html", case_works=case_works)
 
     
-    @app.route("/input_case", methods=["GET"])
+    @app.route("/input_case", methods=["GET", "POST"])
     def input_case():
         clients = dbu.get_all_clients()
+        if request.method == "POST":
+            try:
+                # Get form data
+                data = request.form
+                case_name = data.get('case-name')
+                client_id = data.get('client-id')
+                billing_type = data.get('billing_type')
+                rate_amount = data.get('rate_amount')
+                if not case_name or not client_id or not billing_type and not rate_amount:
+                    return render_template("input_case.html", clients=clients,
+                                           companies=dbu.get_all_outsource_companies(),
+                                            case_types=dbu.get_all_case_types(),
+                                            error="Az ügy neve, az ügyfél, a díjazás típusa és a díj mértéke kiválasztása kötelező.")
 
+                # Create the new Case
+                md.Case.create(
+                    name=case_name,
+                    client_id=client_id,
+                    description=data.get('case-description'),
+                    billing_type=md.BillingType(billing_type),
+                    rate_amount=float(rate_amount) if rate_amount else 0.0,
+                    is_outsourced=data.get('is-outsourced') == 'on',
+                    outsource_company_id=int(data.get('outsource_company_id')) if data.get('is-outsourced') == 'on' else None,
+                    case_type_id=int(data.get('case_type_id')) if data.get('case_type_id') else None
+                )
+                return render_template("input_case.html", clients=clients,
+                                       companies=dbu.get_all_outsource_companies(),
+                                        case_types=dbu.get_all_case_types(),
+                                        message="Sikeresen hozzáadva!")
+            except Exception as e:
+                print(tb.format_exc())
+                return render_template("input_case.html", clients=clients,
+                                       companies=dbu.get_all_outsource_companies(),
+                                       case_types=dbu.get_all_case_types(),
+                                       error="Hiba történt az ügy felvételénél.")
+
+        # GET request
         return render_template("input_case.html", clients=clients,
                                companies=dbu.get_all_outsource_companies(),
                                case_types=dbu.get_all_case_types())
-
 
     @app.route('/get-users', methods=['GET'])
     def get_users():
@@ -299,31 +347,6 @@ def register_routes(app):
         except Exception as e:
             print(tb.format_exc())
             return jsonify({"error": str(e)}), 500
-
-    @app.route('/save-case', methods=['POST'])
-    def save_case():
-        try:
-            # Get form data
-            data = request.form
-
-            # Create the new Case
-            md.Case.create(
-                name=data.get('case-name'),
-                client_id=int(data.get('client-id')),
-                description=data.get('case-description'),
-                billing_type=md.BillingType(data.get('billing_type')),
-                rate_amount=float(data.get('rate_amount', 0.0)),
-                is_outsourced=data.get('is-outsourced') == 'on',
-                outsource_company_id=int(data.get('outsource_company_id')) if data.get('is-outsourced') == 'on' else None,
-                case_type_id=int(data.get('case_type_id')) if data.get('case_type_id') else None
-            )
-
-            return render_template("input_case.html", message="Sikeresen elmentve!")
-
-        except Exception as e:
-            db.session.rollback()
-            print(tb.format_exc())
-            return render_template("input_case.html", error="Hiba történt az ügy mentésekor.")
 
     @app.route('/input_outsource_company', methods=['GET', 'POST'])
     def input_outsource_company():
@@ -464,8 +487,3 @@ def register_routes(app):
 
         # GET request
         return render_template('input_client.html')
-
-    @app.route("/add-client", methods=["POST"])
-    def add_client():
-        
-        return redirect("/input_client")
