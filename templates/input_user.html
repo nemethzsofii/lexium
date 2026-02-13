@@ -14,31 +14,11 @@ Nyilvántartó{% endblock %} {% block content %}
       {% endif %}
       <form method="post">
         <div class="mb-3">
-          <label class="form-label">Felhasználónév</label>
-          <input
-            class="form-control"
-            name="username"
-            placeholder="Felhasználónév"
-            required
-          />
-        </div>
-
-        <div class="mb-3">
           <label class="form-label">Vezetéknév</label>
           <input
             class="form-control"
             name="last_name"
-            placeholder="Vezetéknév"
-            required
-          />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Vezetéknév</label>
-          <input
-            class="form-control"
-            name="last_name"
-            placeholder="Vezetéknév"
+            id="last_name"
             required
           />
         </div>
@@ -48,10 +28,16 @@ Nyilvántartó{% endblock %} {% block content %}
           <input
             class="form-control"
             name="first_name"
-            placeholder="Keresztnév"
+            id="first_name"
             required
           />
         </div>
+
+        <div class="mb-3">
+          <label class="form-label">Felhasználónév</label>
+          <input class="form-control" name="username" id="username" required />
+        </div>
+
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-primary flex-fill">
             Mentés
@@ -64,4 +50,35 @@ Nyilvántartó{% endblock %} {% block content %}
     </div>
   </div>
 </div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
+    const usernameInput = document.getElementById('username');
+
+    function generateUsername() {
+      const firstName = firstNameInput.value.trim();
+      const lastName = lastNameInput.value.trim();
+
+      if (firstName || lastName) {
+        // Convert to lowercase
+        // Replace spaces or multiple spaces with underscore
+        const username = `${firstName} ${lastName}`
+          .toLowerCase()
+          .normalize('NFD') // decompose accents
+          .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+          .replace(/\s+/g, '_'); // replace spaces with underscores
+
+        usernameInput.value = username;
+      } else {
+        usernameInput.value = '';
+      }
+    }
+
+    // Listen to both inputs
+    firstNameInput.addEventListener('input', generateUsername);
+    lastNameInput.addEventListener('input', generateUsername);
+  });
+</script>
 {% endblock %}
