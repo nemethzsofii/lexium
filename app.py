@@ -12,6 +12,8 @@ import db_utils as dbu
 from db import db, init_db
 import models as md
 
+import general_utils as gu
+
 def create_app(config=None):
     app = Flask(__name__)
 
@@ -224,17 +226,31 @@ def register_routes(app):
             try:
                 user_id = int(request.form.get("user_id"))
                 case_id = int(request.form.get("case_id"))
-                date = request.form.get("date")
-                start_time = request.form.get("start_time")
-                end_time = request.form.get("end_time")
                 description = request.form.get("description")
-                if not all([user_id, case_id, date, start_time, end_time]):
+
+                # Parse date and time fields
+                date_str = request.form.get("date")
+                date_obj = None
+                if date_str:
+                    date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+                start_time_str = request.form.get("start_time")
+                end_time_str = request.form.get("end_time")
+                start_time = None
+                end_time = None
+                if start_time_str:
+                    start_time = gu.parse_time(start_time_str)
+                if end_time_str:
+                    end_time = gu.parse_time(end_time_str)
+
+                if not all([user_id, case_id, date_obj, start_time, end_time]):
                     return render_template("input_case_work.html",
                                         users=users,
                                         cases=cases,
                                         error="Minden mező kitöltése kötelező!")
 
-                dbu.create_case_work(user_id, case_id, date, start_time, end_time, description)
+                # create case work object and save to database
+                dbu.create_case_work(user_id, case_id, date_obj, start_time, end_time, description)
+
                 return render_template("input_case_work.html",
                                     users=users,
                                     cases=cases,
@@ -283,15 +299,39 @@ def register_routes(app):
     @app.route("/edit-case-work/<int:case_work_id>", methods=["GET", "POST"])
     def edit_case_work(case_work_id):
         case_work = db.session.get(md.CaseWork, case_work_id)
+
         if not case_work:
             return jsonify({"message": "Case work not found"}), 404
         if request.method == "POST":
-            case_work.user_id = int(request.form.get("user_id"))
-            case_work.case_id = int(request.form.get("case_id"))
-            case_work.date = request.form.get("date")
-            case_work.start_time = request.form.get("start_time")
-            case_work.end_time = request.form.get("end_time")
-            case_work.description = request.form.get("description")
+            user_id = int(request.form.get("user_id"))
+            case_id = int(request.form.get("case_id"))
+            description = request.form.get("description")
+            # Parse date and time fields
+            date_str = request.form.get("date")
+            date_obj = None
+            if date_str:
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+            start_time_str = request.form.get("start_time")
+            end_time_str = request.form.get("end_time")
+            start_time = None
+            end_time = None
+            if start_time_str:
+                start_time = gu.parse_time(start_time_str)
+            if end_time_str:
+                end_time = gu.parse_time(end_time_str)
+            if not all([user_id, case_id, date_obj, start_time, end_time]):
+                return render_template("edit_case_work.html",
+                                    case_work=case_work,
+                                    users=dbu.get_all_users(),
+                                    cases=dbu.get_all_cases(),
+                                    error="Minden mező (kivéve a leírást) kitöltése kötelező!")
+            
+            case_work.user_id = user_id
+            case_work.case_id = case_id
+            case_work.date = date_obj
+            case_work.start_time = start_time
+            case_work.end_time = end_time
+            case_work.description = description
             case_work.billed = "billed" in request.form
 
             db.session.commit()
