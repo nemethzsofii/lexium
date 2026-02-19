@@ -23,6 +23,30 @@ def create_app(config=None):
 
     init_db(app)
     register_routes(app)
+
+    @app.errorhandler(Exception)
+    def handle_error(e):
+        # Default values
+        error_code = getattr(e, 'code', 500)
+        error_message = getattr(e, 'description', 'Something went wrong!')
+
+        # handle custom messages for certain errors
+        if error_code == 404:
+            error_message = "Page not found!"
+        elif error_code == 500:
+            error_message = "Internal server error!"
+        elif error_code == 405:
+            error_message = "Method not allowed!"
+        elif error_code == 400:
+            error_message = "Bad request!"
+        print(tb.format_exc())
+
+        return render_template(
+            "error.html",
+            error_code=error_code,
+            error_message=error_message
+        ), error_code
+    
     return app
 
 def get_or_create_secret_key():
