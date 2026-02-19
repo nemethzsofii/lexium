@@ -277,7 +277,7 @@ def register_routes(app):
             case.description = request.form.get("case-description")
             case.client_id = int(request.form.get("client-id"))
             case.is_outsourced = "is_outsourced" in request.form
-            case.case_type_id = int(request.form.get("case_type_id")) if request.form.get("case_type_id") else None
+            case.case_type_id = int(request.form.get("case-type-id")) if request.form.get("case-type-id") else None
 
             case.billing_type = md.BillingType(request.form.get("billing_type"))
             case.rate_amount = Decimal(request.form.get("rate_amount", "0.00"))

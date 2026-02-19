@@ -48,13 +48,14 @@ Nyilvántartó{% endblock %} {% block content %}
 	  <!-- Case Type -->
       <div class="mb-3">
         <label class="form-label">Ügytípus</label>
-        <select class="form-select" name="case-type-id" required>
+        <select class="form-select" name="case-type-id">
+		<option value="">--Nincs típus--</option>
           {% for case_type in case_types %}
           <option
             value="{{ case_type.id }}"
             {%
             if
-            case_type.id=="case.case_type_id"
+            case_type.id==case.case_type_id
             %}selected{%
             endif
             %}
