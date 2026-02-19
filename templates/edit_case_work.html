@@ -14,12 +14,12 @@ Nyilvántartó{% endblock %} {% block content %}
             value="{{ user.id }}"
             {%
             if
-            user.id=="case_work.user_id"
+            user.id==case_work.user_id
             %}selected{%
             endif
             %}
           >
-            {{ user.name }}
+            {{ user.username }}
           </option>
           {% endfor %}
         </select>
@@ -34,7 +34,7 @@ Nyilvántartó{% endblock %} {% block content %}
             value="{{ case.id }}"
             {%
             if
-            case.id=="case_work.case_id"
+            case.id==case_work.case_id
             %}selected{%
             endif
             %}

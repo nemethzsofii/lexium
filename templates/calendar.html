@@ -1,71 +1,158 @@
 {% extends "layout.html" %} {% block title %}Munka Naptár - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
-<h1 class="mb-4">Munka Naptár</h1>
+<h1 class="mb-4 text-center">Munka Naptár</h1>
 
-<!-- Month selector -->
-<form
-  id="monthForm"
-  method="get"
-  style="margin-bottom: 20px; text-align: center"
->
+<!-- Month navigation -->
+<div class="d-flex justify-content-center align-items-center mb-3 gap-2">
+  <a
+    href="?month={{ (current_year ~ '-' ~ '%02d'|format(current_month - 1)) if current_month > 1 else ((current_year-1) ~ '-12') }}"
+    class="btn btn-outline-primary"
+    >&laquo; Előző hónap</a
+  >
+
   <input
     type="month"
     name="month"
     value="{{ current_year }}-{{ '%02d'|format(current_month) }}"
-    onchange="document.getElementById('monthForm').submit()"
-    style="font-size: 1.1em; padding: 5px"
+    id="monthInput"
+    class="form-control text-center"
+    style="width: 180px"
   />
-</form>
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed">
-  <thead style="background-color: #f0f0f0">
+  <a
+    href="?month={{ (current_year ~ '-' ~ '%02d'|format(current_month + 1)) if current_month < 12 else ((current_year+1) ~ '-01') }}"
+    class="btn btn-outline-primary"
+    >Következő hónap &raquo;</a
+  >
+</div>
+
+<!-- Calendar table -->
+<table class="table table-bordered text-center" style="table-layout: fixed">
+  <thead class="table-light">
     <tr>
-      <th style="width: 14%">Sun</th>
-      <th style="width: 14%">Mon</th>
-      <th style="width: 14%">Tue</th>
-      <th style="width: 14%">Wed</th>
-      <th style="width: 14%">Thu</th>
-      <th style="width: 14%">Fri</th>
-      <th style="width: 14%">Sat</th>
+      <th>H</th>
+      <th>K</th>
+      <th>Sze</th>
+      <th>Cs</th>
+      <th>P</th>
+      <th>Szo</th>
+      <th>V</th>
     </tr>
   </thead>
   <tbody>
     {% for week in month_days %}
     <tr>
-      {% for day in week %}
-      <td
-        style="
-          vertical-align: top;
-          padding: 5px;
-          height: 150px;
-          overflow: hidden;
-          border: 1px solid #ddd;
-        "
-      >
-        <strong>{{ day.date.day }}</strong>
-        {% for cw in day.works %}
-        <div
-          style="
-            margin-top: 2px;
-            padding: 2px;
-            background: #e3f2fd;
-            border-radius: 4px;
-            font-size: 0.9em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          "
-        >
-          {{ cw.start_time.strftime("%H:%M") }}–{{ cw.end_time.strftime("%H:%M")
-          }}<br />
-          {{ cw.case.number }} – {{ cw.case.name }}<br />
-          <em>{{ cw.user.username }}</em>
+      {% for day in week %} {% set is_today = day.date == today %}
+      <td class="calendar-cell {% if is_today %}today-cell{% endif %}">
+        {% if day.date %}
+        <div class="date-number">{{ day.date.day }}</div>
+
+        <div class="case-work-container">
+          {% for cw in day.works %}
+          <div
+            class="case-work-card"
+            data-bs-toggle="tooltip"
+            data-bs-html="true"
+            title="
+              <strong>{{ cw.case.number }} – {{ cw.case.name }}</strong><br>
+              {{ cw.start_time.strftime('%H:%M') }} – {{ cw.end_time.strftime('%H:%M') }}<br>
+              Felhasználó: {{ cw.user.username }}<br>
+              Leírás: {{ cw.description|default('N/A') }}
+            "
+          >
+            {{ cw.case.number }} – {{ cw.case.name }}
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
+        {% endif %}
       </td>
       {% endfor %}
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
+{% endblock %} {% block extra_js %}
+<script>
+  // Auto-submit month input
+  document.getElementById('monthInput').addEventListener('change', function () {
+    window.location.href = '?month=' + this.value;
+  });
+
+  // Enable Bootstrap tooltips
+  document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]'),
+    );
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
+
+<style>
+  /* Calendar cells */
+  .calendar-cell {
+    position: relative;
+    height: 140px;
+    vertical-align: top;
+    padding: 4px;
+    overflow: hidden;
+    background: #f9f9f9;
+  }
+
+  /* Today highlight */
+  .today-cell {
+    background-color: #d4e8ff;
+    border: 2px solid #aedff8 !important;
+    border-radius: 8px;
+  }
+
+  /* Date number top-left */
+  .date-number {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-weight: bold;
+    font-size: 0.9em;
+  }
+
+  /* Case works container with scroll */
+  .case-work-container {
+    margin-top: 20px;
+    max-height: 95px;
+    overflow-y: auto;
+    padding-right: 2px; /* space for scrollbar */
+  }
+
+  /* Case work cards */
+  .case-work-card {
+    background-color: #e3f2fd;
+    font-size: 0.85em;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    border-radius: 4px;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .case-work-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+    position: relative;
+  }
+
+  /* Table cell spacing */
+  table.table td,
+  table.table th {
+    vertical-align: top;
+    padding: 4px;
+  }
+</style>
 {% endblock %}

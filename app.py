@@ -337,6 +337,7 @@ def register_routes(app):
             db.session.commit()
             return redirect(url_for("case_work_table"))
         elif request.method == "GET":
+            print(dbu.get_all_users())
             return render_template(
                 "edit_case_work.html",
                 case_work=case_work,
@@ -366,7 +367,7 @@ def register_routes(app):
         else:
             return jsonify({"message": "Method not allowed"}), 405
         
-    @app.route("/delete-case-work/<int:case_work_id>")
+    @app.route("/delete-case-work/<int:case_work_id>", methods=["POST"])
     def delete_case_work(case_work_id):
         case_work = md.CaseWork.query.get_or_404(case_work_id)
 
@@ -545,50 +546,37 @@ def register_routes(app):
     def calendar_view():
         # Get month from query params or use current month
         month_str = request.args.get("month")
-        if month_str:
-            try:
-                current_date = datetime.strptime(month_str, "%Y-%m")
-            except ValueError:
-                current_date = datetime.today()
-        else:
+        try:
+            current_date = datetime.strptime(month_str, "%Y-%m") if month_str else datetime.today()
+        except ValueError:
             current_date = datetime.today()
 
         current_year = current_date.year
         current_month = current_date.month
 
-        # Build month days grid
-        first_day = date(current_year, current_month, 1)
-        _, num_days = calendar.monthrange(current_year, current_month)
-
-        # Create list of weeks
+        # Build month days grid using calendar.Calendar (Monday-first)
+        cal = calendar.Calendar(firstweekday=0)  # 0 = Monday
         month_days = []
-        week = []
 
-        # Fill initial empty days
-        for _ in range(first_day.weekday() + 1):  # Mon=0..Sun=6
-            week.append({"date": None, "works": []})
+        for week in cal.monthdatescalendar(current_year, current_month):
+            week_list = []
+            for day_date in week:
+                if day_date.month == current_month:
+                    works = dbu.get_case_works_by_date(day_date)
+                    week_list.append({"date": day_date, "works": works})
+                else:
+                    week_list.append({"date": None, "works": []})
+            month_days.append(week_list)
 
-        for day in range(1, num_days + 1):
-            day_date = date(current_year, current_month, day)
-            # Fetch works for this day
-            works = dbu.get_case_works_by_date(day_date)
-            week.append({"date": day_date, "works": works})
-            if len(week) == 7:
-                month_days.append(week)
-                week = []
-
-        # Fill remaining week
-        if week:
-            while len(week) < 7:
-                week.append({"date": None, "works": []})
-            month_days.append(week)
-
+        today = date.today()
         return render_template(
             "calendar.html",
             month_days=month_days,
             current_year=current_year,
-            current_month=current_month
+            current_month=current_month,
+            today=today
         )
+
     
     @app.route("/client-table", methods=["GET"])
     def client_table():
