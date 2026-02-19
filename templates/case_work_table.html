@@ -1,6 +1,26 @@
 {% extends "layout.html" %} {% block title %}Munkák - Jogügyleti Nyilvántartó{%
 endblock %} {% block content %}
 <style>
+  .table td,
+  .table th {
+    max-width: 200px;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .table td,
+  .table th {
+    max-width: 200px;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .modal-content {
+    background-color: #1f1f1f;
+    color: #ffffff;
+  }
+  .modal-header,
+  .modal-footer {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
   th.sortable {
     cursor: pointer;
     user-select: none;
@@ -118,7 +138,9 @@ endblock %} {% block content %}
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
           Mégse
         </button>
-        <a href="#" id="confirmDeleteBtn" class="btn btn-danger"> Törlés </a>
+        <form id="deleteForm" method="POST">
+          <button type="submit" class="btn btn-danger">Törlés</button>
+        </form>
       </div>
     </div>
   </div>
@@ -126,14 +148,15 @@ endblock %} {% block content %}
 <script src="/static/js/table_sort_search.js"></script>
 
 <script>
+  const deleteForm = document.getElementById('deleteForm');
   const deleteModal = document.getElementById('deleteCaseWorkModal');
-  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
   deleteModal.addEventListener('show.bs.modal', function (event) {
     const triggerBtn = event.relatedTarget;
     const caseWorkId = triggerBtn.getAttribute('data-case-work-id');
 
-    confirmDeleteBtn.href = `/delete-case-work/${caseWorkId}`;
+    deleteForm.method = 'POST';
+    deleteForm.action = `/delete-case-work/${caseWorkId}`;
   });
 </script>
 {% endblock %}

@@ -192,7 +192,7 @@ class Client(db.Model):
     __tablename__ = 'clients'
 
     id = db.Column(db.Integer, primary_key=True)
-    client_code = db.Column(db.String(20), nullable=False, unique=True)
+    client_code = db.Column(db.String(20), nullable=True, unique=True)
     name = db.Column(db.String(100), nullable=False)
     tax_number = db.Column(db.String(20), nullable=True)
     client_type = db.Column(db.String(20), nullable=False)

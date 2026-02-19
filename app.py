@@ -141,6 +141,32 @@ def register_routes(app):
             )
         else:
             return jsonify({"message": "Method not allowed"}), 405
+    
+    @app.route("/edit-client/<int:client_id>", methods=["GET", "POST"])
+    def edit_client(client_id):
+        client = db.session.get(md.Client, client_id)
+        if not client:
+            return jsonify({"message": "Client not found"}), 404
+
+        if request.method == "POST":
+            client.name = request.form.get("client-name")
+            client.client_code = request.form.get("client-client-code")
+            client.tax_number = request.form.get("client-tax-number")
+            if isinstance(client, md.ClientPerson):
+                client.birth_date = request.form.get("client-birth-date")
+                client.address = request.form.get("client-address")
+            elif isinstance(client, md.ClientCompany):
+                client.headquarters = request.form.get("client-headquarters")
+
+            db.session.commit()
+            return redirect(url_for("client_table"))
+        elif request.method == "GET":
+            return render_template(
+                "edit_client.html",
+                client=client
+            )
+        else:
+            return jsonify({"message": "Method not allowed"}), 405
 
     @app.route("/delete-outsource-company/<int:company_id>", methods=["POST"])
     def delete_outsource_company(company_id):
@@ -157,6 +183,38 @@ def register_routes(app):
             print(tb.format_exc())
             flash("Hiba történt a bedolgozó cég törlésekor.", "danger")
             return redirect(url_for("outsource_company_table"))
+    
+    @app.route("/delete-client/<int:client_id>", methods=["POST"])
+    def delete_client(client_id):
+        try:
+            client = md.Client.query.get_or_404(client_id)
+
+            db.session.delete(client)
+            db.session.commit()
+
+            flash("Az ügyfél sikeresen törölve lett.", "success")
+            return redirect(url_for("client_table"))
+        except Exception as e:
+            db.session.rollback()
+            print(tb.format_exc())
+            flash("Hiba történt az ügyfél törlésekor.", "danger")
+            return redirect(url_for("client_table"))
+    
+    @app.route("/delete-user/<int:user_id>", methods=["POST"])
+    def delete_user(user_id):
+        try:
+            user = md.User.query.get_or_404(user_id)
+
+            db.session.delete(user)
+            db.session.commit()
+
+            flash("A felhasználó sikeresen törölve lett.", "success")
+            return redirect(url_for("user_table"))
+        except Exception as e:
+            db.session.rollback()
+            print(tb.format_exc())
+            flash("Hiba történt a felhasználó törlésekor.", "danger")
+            return redirect(url_for("user_table"))
 
     @app.route("/input_case_work", methods=["GET", "POST"])
     def input_case_work():
@@ -203,6 +261,7 @@ def register_routes(app):
             case.description = request.form.get("case-description")
             case.client_id = int(request.form.get("client-id"))
             case.is_outsourced = "is_outsourced" in request.form
+            case.case_type_id = int(request.form.get("case_type_id")) if request.form.get("case_type_id") else None
 
             case.billing_type = md.BillingType(request.form.get("billing_type"))
             case.rate_amount = Decimal(request.form.get("rate_amount", "0.00"))
@@ -245,6 +304,27 @@ def register_routes(app):
                 cases=dbu.get_all_cases())
         else:
             return jsonify({"message": "Method not allowed"}), 405
+    
+    @app.route("/edit-user/<int:user_id>", methods=["GET", "POST"])
+    def edit_user(user_id):
+        user = db.session.get(md.User, user_id)
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+        if request.method == "POST":
+            if dbu.get_user_by_username(request.form.get("username")) and dbu.get_user_by_username(request.form.get("username")).id != user_id:
+                return render_template("edit_user.html", user=user, error="Ez a felhasználónév már foglalt.")
+            user.username = request.form.get("username")
+            user.first_name = request.form.get("first_name")
+            user.last_name = request.form.get("last_name")
+
+            db.session.commit()
+            return redirect(url_for("user_table"))
+        elif request.method == "GET":
+            return render_template(
+                "edit_user.html",
+                user=user)
+        else:
+            return jsonify({"message": "Method not allowed"}), 405
         
     @app.route("/delete-case-work/<int:case_work_id>")
     def delete_case_work(case_work_id):
@@ -270,7 +350,11 @@ def register_routes(app):
     def case_work_table():
         case_works = dbu.get_all_case_works()
         return render_template("case_work_table.html", case_works=case_works)
-
+    
+    @app.route("/user-table", methods=["GET"])
+    def user_table():
+        users = dbu.get_all_users()
+        return render_template("user_table.html", users=users)
     
     @app.route("/input_case", methods=["GET", "POST"])
     def input_case():
@@ -330,7 +414,8 @@ def register_routes(app):
                     return render_template('input_user.html', error="A vezetéknév megadása kötelező.")
                 if not last_name:
                     return render_template('input_user.html', error="A keresztnév megadása kötelező.")
-                
+                if dbu.get_user_by_username(username):
+                    return render_template('input_user.html', error="Ez a felhasználónév már foglalt.")
                 new_user = md.User(username=username, first_name=first_name, last_name=last_name)
                 db.session.add(new_user)
                 db.session.commit()

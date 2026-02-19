@@ -1,0 +1,60 @@
+{% extends "layout.html" %} {% block title %}Felhasználó szerkesztése -
+Jogügyleti Nyilvántartó{% endblock %} {% block content %}
+<h1 class="mb-4">Felhasználó szerkesztése</h1>
+{% if message %}
+<div class="alert alert-success">{{ message }}</div>
+{% endif %} {% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="POST">
+      <!-- Lastname -->
+      <div class="mb-3">
+        <label class="form-label">Vezetéknév</label>
+        <input
+          type="text"
+          class="form-control"
+          name="last_name"
+          id="last_name"
+          value="{{ user.last_name }}"
+          required
+        />
+      </div>
+      <!-- Firstname -->
+      <div class="mb-3">
+        <label class="form-label">Keresztnév</label>
+        <input
+          type="text"
+          class="form-control"
+          name="first_name"
+          id="first_name"
+          value="{{ user.first_name }}"
+          required
+        />
+      </div>
+      <!-- Username -->
+      <div class="mb-3">
+        <label class="form-label">Felhasználónév</label>
+        <input
+          type="text"
+          class="form-control"
+          name="username"
+          id="username"
+          value="{{ user.username }}"
+          required
+        />
+      </div>
+      <!-- Actions -->
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Mentés</button>
+        <a href="{{ url_for('user_table') }}" class="btn btn-outline-secondary">
+          Mégse
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='js/automatic_username_generation.js') }}"></script>
+{% endblock %}

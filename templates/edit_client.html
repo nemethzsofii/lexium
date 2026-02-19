@@ -1,0 +1,94 @@
+{% extends "layout.html" %} {% block title %}Ügyfél szerkesztése - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="mb-4">Ügyfél szerkesztése</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="POST">
+      <!-- Client name -->
+      <div class="mb-3">
+        <label class="form-label">Ügyfél neve</label>
+        <input
+          type="text"
+          class="form-control"
+          name="client-name"
+          value="{{ client.name }}"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Ügyfél típusa</label>
+        <select class="form-select" name="client-type" required disabled>
+          <option value="PERSON" {% if client.client_type == "PERSON" %}selected{% endif %}>
+            Magánszemély
+          </option>
+          <option value="COMPANY" {% if client.client_type == "COMPANY" %}selected{% endif %}>
+            Cég
+          </option>
+        </select>
+      <!-- Client code -->
+      <div class="mb-3">
+        <label class="form-label">Ügyfél kódja</label>
+        <input
+          type="text"
+          class="form-control"
+          name="client-code"
+          value="{{ client.client_code }}"
+        />
+      </div>
+      <!-- Tax number -->
+      <div class="mb-3">
+        <label class="form-label">Adószám</label>
+        <input
+          type="text"
+          class="form-control"
+          name="client-tax-number"
+          value="{{ client.tax_number }}"
+        />
+      </div>
+      {% if client.client_type == "PERSON" %}
+      <!-- Birth date -->
+      <div class="mb-3">
+        <label class="form-label">Születési dátum</label>
+        <input
+          type="date"
+          class="form-control"
+          name="client-birth-date"
+          value="{{ client.birth_date }}"
+        />
+      </div>
+
+      <!-- Address -->
+      <div class="mb-3">
+        <label class="form-label">Cím</label>
+        <input
+          type="text"
+          class="form-control"
+          name="client-address"
+          value="{{ client.address }}"
+        />
+      </div>
+      {% endif %} {% if client.client_type == "COMPANY" %}
+      <!-- Company address -->
+      <div class="mb-3">
+        <label class="form-label">Székhely</label>
+        <input
+          type="text"
+          class="form-control"
+          name="client-headquarters"
+          value="{{ client.headquarters }}"
+        />
+      </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Mentés</button>
+        <a href="{{ url_for('client_table') }}" class="btn btn-outline-secondary">
+          Mégse
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
