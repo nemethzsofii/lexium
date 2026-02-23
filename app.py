@@ -80,6 +80,13 @@ def register_routes(app):
 
     @app.route("/cases/<case_number>/export-pdf")
     def export_case_pdf(case_number):
+        def clean_text(text):
+            if not text:
+                return "-"
+            if not isinstance(text, str):
+                return text
+            return text.replace("ő", "o").replace("Ő", "O")
+        
         # ---- Fetch Case ----
         case = md.Case.query.filter_by(number=case_number).first()
 
@@ -95,7 +102,7 @@ def register_routes(app):
         )
 
         if not works:
-            return jsonify({"error": "Nem található rögzített munka ehhez az ügyhöz."}), 404
+            return jsonify({"error": "Nem található számlázatlan rögzített munka ehhez az ügyhöz."}), 404
 
         # ---- PDF Setup ----
         buffer = BytesIO()
@@ -123,7 +130,7 @@ def register_routes(app):
         # ---- Title ----
         elements.append(
             Paragraph(
-                f"<b>Ügy összefoglaló</b><br/>{case.number} - {case.name}",
+                f"<b>Ügy összefoglaló</b><br/>{case.number} - {clean_text(case.name)}",
                 styles["Heading1"]
             )
         )
@@ -148,12 +155,11 @@ def register_routes(app):
 
             row = [
                 Paragraph(w.date.strftime("%Y-%m-%d"), table_style),
-                Paragraph(w.user.username if w.user else "-", table_style),
+                Paragraph(clean_text(w.user.username) if w.user else "-", table_style),
                 Paragraph(w.start_time.strftime("%H:%M"), table_style),
                 Paragraph(w.end_time.strftime("%H:%M"), table_style),
                 Paragraph(f"{duration_hours}", table_style),
-                Paragraph("Yes" if w.billed else "No", table_style),
-                Paragraph(w.description.replace("ő", "o") or "-", table_style)
+                Paragraph(clean_text(w.description) or "-", table_style)
             ]
             data.append(row)
 
@@ -163,7 +169,7 @@ def register_routes(app):
         table = Table(
             data,
             repeatRows=1,
-            colWidths = [60, 90, 40, 40, 60, 40, 225],
+            colWidths = [60, 95, 45, 45, 60, 225],
             splitByRow=1  # allows row to break over pages
         )
 
@@ -190,7 +196,7 @@ def register_routes(app):
         # ---- Total Summary ----
         elements.append(
             Paragraph(
-                f"<b>Total hours:</b> {total_hours} h",
+                f"<b>Összesített óraszám:</b> {total_hours} h",
                 styles["Heading2"]
             )
         )
