@@ -1,7 +1,11 @@
 {% extends "layout.html" %} {% block title %}Ügyfél szerkesztése - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
 <h1 class="mb-4">Ügyfél szerkesztése</h1>
-
+ {% if message %}
+      <div class="alert alert-success">{{ message }}</div>
+      {% endif %} {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
 <div class="card shadow-sm">
   <div class="card-body">
     <form method="POST">
@@ -26,21 +30,11 @@ Nyilvántartó{% endblock %} {% block content %}
             Cég
           </option>
         </select>
-      <!-- Client code -->
-      <div class="mb-3">
-        <label class="form-label">Ügyfél kódja</label>
-        <input
-          type="text"
-          class="form-control"
-          name="client-code"
-          value="{{ client.client_code }}"
-        />
-      </div>
       <!-- Tax number -->
       <div class="mb-3">
         <label class="form-label">Adószám</label>
         <input
-          type="text"
+          type="number"
           class="form-control"
           name="client-tax-number"
           value="{{ client.tax_number }}"

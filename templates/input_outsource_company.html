@@ -1,6 +1,6 @@
-{% extends "layout.html" %} {% block title %}Új Bedolgozó Cég - Jogügyleti
+{% extends "layout.html" %} {% block title %}Új Bedolgozható Cég - Jogügyleti
 Nyilvántartó{% endblock %} {% block content %}
-<h1 class="text-center mb-5">Új Bedolgozó Cég Felvétele</h1>
+<h1 class="text-center mb-5">Új Bedolgozható Cég Felvétele</h1>
 
 <div class="row g-4 justify-content-center">
   <div class="card shadow-sm col-md-6">
@@ -36,7 +36,12 @@ Nyilvántartó{% endblock %} {% block content %}
 
         <div class="mb-3">
           <label class="form-label">Adószám (opcionális)</label>
-          <input class="form-control" name="tax-number" placeholder="Adószám" />
+          <input
+            type="number"
+            class="form-control"
+            name="tax-number"
+            placeholder="Adószám"
+          />
         </div>
 
         <div class="d-flex gap-2">

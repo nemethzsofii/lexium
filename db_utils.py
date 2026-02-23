@@ -98,6 +98,9 @@ def delete_case(case_id):
         return False
     return delete_instance(case)
 
+def get_case_by_number(case_number):
+    return Case.query.filter_by(number=case_number).first() or None
+
 # --------------------
 # Case type utilities
 # --------------------
@@ -161,9 +164,8 @@ def delete_case_work(case_work_id):
 # Client utilities
 # --------------------
 
-def create_client_person(client_code, name, tax_number=None, birth_date=None, address=None):
+def create_client_person(name, tax_number=None, birth_date=None, address=None):
     client = ClientPerson(
-        client_code=client_code,
         name=name,
         tax_number=tax_number,
         birth_date=birth_date,
@@ -172,9 +174,8 @@ def create_client_person(client_code, name, tax_number=None, birth_date=None, ad
     return add_instance(client)
 
 
-def create_client_company(client_code, name, tax_number=None, headquarters=None):
+def create_client_company(name, tax_number=None, headquarters=None):
     client = ClientCompany(
-        client_code=client_code,
         name=name,
         tax_number=tax_number,
         headquarters=headquarters
@@ -184,10 +185,6 @@ def create_client_company(client_code, name, tax_number=None, headquarters=None)
 
 def get_client_by_id(client_id):
     return Client.query.get(client_id)
-
-
-def get_client_by_code(client_code):
-    return Client.query.filter_by(client_code=client_code).first()
 
 
 def get_all_clients():

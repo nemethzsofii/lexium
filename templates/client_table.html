@@ -32,16 +32,16 @@ Nyilvántartó{% endblock %} {% block content %}
   }
 </style>
 
-{% if clients is not defined %}
-<p>Betöltés...</p>
-{% elif clients|length == 0 %}
-<p>Nincs még rögzített ügyfél.</p>
-{% else %}
-<h1 class="mb-4">Rögzített bedolgozható cégek</h1>
+<h1 class="mb-4">Rögzített ügyfelek</h1>
 
 <div class="card shadow-sm">
   <div class="card-body">
     <div class="row mb-3">
+      {% if clients is not defined %}
+      <p>Betöltés...</p>
+      {% elif clients|length == 0 %}
+      <p>Nincs még rögzített ügyfél.</p>
+      {% else %}
       <div class="col-md-4">
         <input
           type="text"
@@ -56,7 +56,6 @@ Nyilvántartó{% endblock %} {% block content %}
         <thead class="table-light">
           <tr>
             <th class="sortable" data-type="number">ID</th>
-            <th class="sortable" data-type="string">Kód</th>
             <th class="sortable" data-type="string">Név</th>
             <th class="sortable" data-type="string">Adószám</th>
             <th class="sortable" data-type="string">Típus</th>
@@ -69,7 +68,6 @@ Nyilvántartó{% endblock %} {% block content %}
           {% for client in clients %}
           <tr>
             <td>{{ client.id }}</td>
-            <td>{{ client.client_code }}</td>
             <td>{{ client.name }}</td>
             <td>{{ client.tax_number or '' }}</td>
             <td>
@@ -111,9 +109,9 @@ Nyilvántartó{% endblock %} {% block content %}
       </table>
       <div
         class="modal fade"
-        id="deleteOutsourceCompanyModal"
+        id="deleteClientModal"
         tabindex="-1"
-        aria-labelledby="deleteOutsourceCompanyModalLabel"
+        aria-labelledby="deleteClientModalLabel"
         aria-hidden="true"
       >
         <div class="modal-dialog modal-dialog-centered">
@@ -131,7 +129,7 @@ Nyilvántartó{% endblock %} {% block content %}
             </div>
             <div class="modal-body">
               <p class="mb-0">
-                Biztosan törlöd ezt az ügyfélét?<br />
+                Biztosan törlöd ezt az ügyfelét?<br />
                 <strong>Ez a művelet nem vonható vissza.</strong>
               </p>
             </div>

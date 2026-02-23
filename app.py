@@ -294,9 +294,26 @@ def register_routes(app):
             return jsonify({"message": "Company not found"}), 404
 
         if request.method == "POST":
-            company.name = request.form.get("company-name")
-            company.short_name = request.form.get("company-short-name")
-            company.tax_number = request.form.get("company-tax-number")
+            company_name = request.form.get("company-name")
+            company_short_name = request.form.get("company-short-name")
+            company_tax_number = int(request.form.get("company-tax-number")) if request.form.get("company-tax-number") else None
+            if not company_name or not company_short_name:
+                return render_template(
+                    "edit_outsource_company.html",
+                    company=company,
+                    error="A név és a rövid név megadása kötelező."
+                )
+            
+            if company_tax_number and len(str(company_tax_number)) != 11:
+                return render_template(
+                    "edit_outsource_company.html",
+                    company=company,
+                    error="Az adószámnak 11 karakterből kell állnia."
+                )
+            
+            company.name = company_name
+            company.short_name = company_short_name
+            company.tax_number = company_tax_number
 
             db.session.commit()
             return redirect(url_for("outsource_company_table"))
@@ -315,11 +332,28 @@ def register_routes(app):
             return jsonify({"message": "Client not found"}), 404
 
         if request.method == "POST":
+            cliet_name = request.form.get("client-name")
+            client_tax_number = int(request.form.get("client-tax-number")) if request.form.get("client-tax-number") else None
+            if not cliet_name:
+                return render_template(
+                    "edit_client.html",
+                    client=client,
+                    error="A név megadása kötelező."
+                )
+            if client_tax_number and len(str(client_tax_number)) != 11:
+                return render_template(
+                    "edit_client.html",
+                    client=client,
+                    error="Az adószámnak 11 karakterből kell állnia."
+                )
             client.name = request.form.get("client-name")
-            client.client_code = request.form.get("client-client-code")
             client.tax_number = request.form.get("client-tax-number")
             if isinstance(client, md.ClientPerson):
-                client.birth_date = request.form.get("client-birth-date")
+                birth_date_str = request.form.get("client-birth-date")
+                if birth_date_str:
+                    client.birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d").date()
+                else:
+                    client.birth_date = None
                 client.address = request.form.get("client-address")
             elif isinstance(client, md.ClientCompany):
                 client.headquarters = request.form.get("client-headquarters")
@@ -342,12 +376,12 @@ def register_routes(app):
             db.session.delete(company)
             db.session.commit()
 
-            flash("A bedolgozó cég sikeresen törölve lett.", "success")
+            flash("A bedolgozható cég sikeresen törölve lett.", "success")
             return redirect(url_for("outsource_company_table"))
         except Exception as e:
             db.session.rollback()
             print(tb.format_exc())
-            flash("Hiba történt a bedolgozó cég törlésekor.", "danger")
+            flash("Hiba történt a bedolgozható cég törlésekor.", "danger")
             return redirect(url_for("outsource_company_table"))
     
     @app.route("/delete-client/<int:client_id>", methods=["POST"])
@@ -438,7 +472,20 @@ def register_routes(app):
 
         if request.method == "POST":
             case.name = request.form.get("case-name")
-            case.number = request.form.get("case-number")
+            case_number = request.form.get("case-number")
+            if case_number and case_number != case.number:
+                if dbu.get_case_by_number(case_number):
+                    return render_template(
+                        "edit_case.html",
+                        case=case,
+                        clients=dbu.get_all_clients(),
+                        case_types=dbu.get_all_case_types(),
+                        companies=dbu.get_all_outsource_companies(),
+                        BillingType=md.BillingType,
+                        error="Ez az ügyszám már foglalt."
+                    )
+            case.number = case_number
+
             case.description = request.form.get("case-description")
             case.client_id = int(request.form.get("client-id"))
             case.case_type_id = int(request.form.get("case-type-id")) if request.form.get("case-type-id") else None
@@ -535,23 +582,35 @@ def register_routes(app):
         
     @app.route("/delete-case-work/<int:case_work_id>", methods=["POST"])
     def delete_case_work(case_work_id):
-        case_work = md.CaseWork.query.get_or_404(case_work_id)
+        try:
+            case_work = md.CaseWork.query.get_or_404(case_work_id)
 
-        db.session.delete(case_work)
-        db.session.commit()
+            db.session.delete(case_work)
+            db.session.commit()
 
-        flash("A munka sikeresen törölve lett.", "success")
-        return redirect(url_for("case_work_table"))
+            flash("A munka sikeresen törölve lett.", "success")
+            return redirect(url_for("case_work_table"))
+        except Exception as e:
+            db.session.rollback()
+            print(tb.format_exc())
+            flash("Hiba történt a munka törlésekor.", "danger")
+            return redirect(url_for("case_work_table"))
     
     @app.route("/delete-case/<int:case_id>")
     def delete_case(case_id):
-        case = md.Case.query.get_or_404(case_id)
+        try:
+            case = md.Case.query.get_or_404(case_id)
 
-        db.session.delete(case)
-        db.session.commit()
+            db.session.delete(case)
+            db.session.commit()
 
-        flash("Az ügy sikeresen törölve lett.", "success")
-        return redirect(url_for("case_table"))
+            flash("Az ügy sikeresen törölve lett.", "success")
+            return redirect(url_for("case_table"))
+        except Exception as e:
+            db.session.rollback()
+            print(tb.format_exc())
+            flash("Hiba történt az ügy törlésekor.", "danger")
+            return redirect(url_for("case_table"))
     
     @app.route("/case-work-table", methods=["GET"])
     def case_work_table():
@@ -755,7 +814,6 @@ def register_routes(app):
         if request.method == 'POST':
             try:
                 client_type = request.form.get("client_type")
-                client_code = request.form.get("client_code")
                 name = request.form.get("name")
                 tax_number = request.form.get("tax_number")
                 if not client_type:
@@ -769,7 +827,6 @@ def register_routes(app):
                     birth_date = request.form.get("birth_date")
                     address = request.form.get("address")
                     new_client = md.ClientPerson(
-                        client_code=client_code,
                         name=name,
                         tax_number=tax_number,
                         birth_date=datetime.strptime(birth_date, "%Y-%m-%d") if birth_date else None,
@@ -778,7 +835,6 @@ def register_routes(app):
                 else:
                     headquarters = request.form.get("headquarters")
                     new_client = md.ClientCompany(
-                        client_code=client_code,
                         name=name,
                         tax_number=tax_number,
                         headquarters=headquarters

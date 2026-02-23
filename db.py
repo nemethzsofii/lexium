@@ -1,3 +1,6 @@
+from datetime import datetime
+import sqlite3
+
 from flask_sqlalchemy import SQLAlchemy
 import os
 import json
@@ -44,6 +47,34 @@ def seed_case_types():
     db.session.commit()
     print("Default case types seeded.")
 
+def backup_sqlite_db(db_path: str, max_backups: int = 10):
+    backup_dir = os.path.join(get_appdata_path(), "backups")
+    os.makedirs(backup_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = os.path.join(backup_dir, f"database_{timestamp}.db")
+
+    # Use SQLite backup API (safe even if DB is in use)
+    source = sqlite3.connect(db_path)
+    dest = sqlite3.connect(backup_path)
+
+    with dest:
+        source.backup(dest)
+
+    dest.close()
+    source.close()
+
+    # Rotate old backups (keep newest 10)
+    backups = sorted(
+        [f for f in os.listdir(backup_dir) if f.endswith(".db")]
+    )
+
+    while len(backups) > max_backups:
+        oldest = backups.pop(0)
+        os.remove(os.path.join(backup_dir, oldest))
+
+    print("Database backup completed.")
+
 def init_db(app):
     db_path = os.path.join(get_appdata_path(), "database.db")
 
@@ -56,4 +87,6 @@ def init_db(app):
     with app.app_context():
         import models # import models here so tables are registered (casetype is known)
         db.create_all()
+        if os.path.exists(db_path):
+            backup_sqlite_db(db_path)
         seed_case_types()
